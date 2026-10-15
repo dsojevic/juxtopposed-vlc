@@ -931,4 +931,38 @@ TestCase {
         mouseMove(player, player.width / 2, player.height / 2)
         tryCompare(player, "bottomVisible", false)
     }
+    function test_volumeWheelAdjustsVolume() {
+        const volumeSlider = findChild(player, "volumeSlider")
+        verify(volumeSlider !== null)
+        const muteButton = findChild(player, "muteButton")
+        verify(muteButton !== null)
+
+        player.muted = false
+        player.volume = 0.5
+        tryCompare(volumeSlider, "value", 0.5)
+
+        // Wheel up on volume cone increases volume
+        mouseWheel(volumeSlider, volumeSlider.width / 2, volumeSlider.height / 2, 0, 120)
+        tryCompare(player, "volume", 0.55)
+
+        // Wheel down on volume cone decreases volume
+        mouseWheel(volumeSlider, volumeSlider.width / 2, volumeSlider.height / 2, 0, -120)
+        tryCompare(player, "volume", 0.5)
+
+        // Wheel past 100% up to maxVolume
+        player.maxVolume = 2.0
+        player.volume = 1.0
+        tryCompare(volumeSlider, "value", 1.0)
+        mouseWheel(volumeSlider, volumeSlider.width / 2, volumeSlider.height / 2, 0, 120)
+        tryCompare(player, "volume", 1.05)
+
+        // Wheel on mute button also adjusts volume
+        mouseWheel(muteButton, muteButton.width / 2, muteButton.height / 2, 0, 120)
+        tryCompare(player, "volume", 1.1)
+
+        // Wheeling while muted un-mutes
+        player.muted = true
+        mouseWheel(volumeSlider, volumeSlider.width / 2, volumeSlider.height / 2, 0, 120)
+        tryCompare(player, "muted", false)
+    }
 }

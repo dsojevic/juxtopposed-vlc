@@ -587,12 +587,29 @@ FocusScope {
                 color: theme.foreground; font.pixelSize: theme.dp(14)
             }
             ChromeButton {
+                id: muteButton
                 objectName: "muteButton"
                 scaleFactor: root.scaleFactor; lightTheme: root.lightTheme; accentColor: root.accentColor
                 implicitWidth: theme.dp(28)
                 iconName: root.muted ? "muted" : "volume"
                 text: root.muted ? qsTr("Unmute") : qsTr("Mute")
                 onClicked: root.muteRequested()
+                WheelHandler {
+                    orientation: Qt.Vertical | Qt.Horizontal
+                    acceptedDevices: PointerDevice.AllDevices
+                    onWheel: (wheel) => {
+                        let delta = 0
+                        if (Math.abs(wheel.angleDelta.y) >= Math.abs(wheel.angleDelta.x))
+                            delta = wheel.angleDelta.y
+                        else
+                            delta = wheel.angleDelta.x
+                        if (delta === 0) return
+
+                        const numSteps = Math.abs(delta) >= 120 ? Math.trunc(delta / 120) : (delta > 0 ? 1 : -1)
+                        volumeSlider.stepBy(numSteps)
+                        wheel.accepted = true
+                    }
+                }
             }
             RedesignVolume {
                 focusPolicy: root.presentationOnly ? Qt.NoFocus : Qt.StrongFocus
@@ -601,7 +618,7 @@ FocusScope {
                 visible: root.width > theme.dp(750)
                 scaleFactor: root.scaleFactor; lightTheme: root.lightTheme; accentColor: root.accentColor
                 muted: root.muted; to: root.maxVolume
-                Binding on value { when: !volumeSlider.pressed; value: root.volume; restoreMode: Binding.RestoreBindingOrValue }
+                Binding on value { when: !volumeSlider.pressed && !volumeSlider.wheelActive; value: root.volume; restoreMode: Binding.RestoreBindingOrValue }
                 onMoved: root.volumeRequested(value)
             }
             ChromeButton {

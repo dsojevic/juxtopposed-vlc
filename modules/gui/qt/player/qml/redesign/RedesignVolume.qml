@@ -9,6 +9,7 @@ T.Slider {
     property color accentColor: "#d37918"
     property bool lightTheme: false
     property bool muted: false
+    property bool wheelActive: false
     readonly property RedesignTheme theme: RedesignTheme { scaleFactor: root.scaleFactor; lightTheme: root.lightTheme; accentColor: root.accentColor }
     implicitWidth: theme.dp(90)
     implicitHeight: theme.dp(28)
@@ -20,6 +21,42 @@ T.Slider {
     Accessible.name: qsTr("Volume")
     padding: 0
     handle: Item { width: 0; height: 0 }
+
+    Timer {
+        id: wheelSettleTimer
+        interval: 300
+        onTriggered: root.wheelActive = false
+    }
+
+    function stepBy(steps) {
+        wheelActive = true
+        wheelSettleTimer.restart()
+        const stepDelta = steps * stepSize
+        const target = Math.max(from, Math.min(to, Math.round((value + stepDelta) * 100) / 100))
+        if (target !== value) {
+            value = target
+            moved()
+        }
+    }
+
+    WheelHandler {
+        id: wheelHandler
+        orientation: Qt.Vertical | Qt.Horizontal
+        acceptedDevices: PointerDevice.AllDevices
+        onWheel: (wheel) => {
+            let delta = 0
+            if (Math.abs(wheel.angleDelta.y) >= Math.abs(wheel.angleDelta.x))
+                delta = wheel.angleDelta.y
+            else
+                delta = wheel.angleDelta.x
+            if (delta === 0) return
+
+            const numSteps = Math.abs(delta) >= 120 ? Math.trunc(delta / 120) : (delta > 0 ? 1 : -1)
+            root.stepBy(numSteps)
+            wheel.accepted = true
+        }
+    }
+
     background: Item {
         RedesignSvg {
             id: cone
@@ -64,5 +101,5 @@ T.Slider {
             border.color: theme.accent
         }
     }
-    RedesignToolTip { theme: root.theme; text: qsTr("%1%").arg(Math.round(root.value * 100)); visible: root.hovered || root.visualFocus || root.pressed; delay: 0 }
+    RedesignToolTip { theme: root.theme; text: qsTr("%1%").arg(Math.round(root.value * 100)); visible: root.hovered || root.visualFocus || root.pressed || root.wheelActive; delay: 0 }
 }
