@@ -53,6 +53,7 @@ vlc_tests += {
     'link_with': [libvlc, libvlccore],
     'module_depends': ['medialibrary', 'wav', 'araw', 'adummy', 'subtitle', 'subsdec'],
     'env': ['VLC_PLUGIN_PATH=' + vlc_build_root / 'modules'],
+    'enabled': medialibrary_dep.found(),
 }
 
 if not (host_system == 'windows') # missing mkdtemp()
@@ -62,6 +63,7 @@ vlc_tests += {
     'suite' : ['modules', 'test_modules'],
     'link_with' : [libvlc, libvlccore],
     'module_depends' : vlc_plugins_targets.keys(),
+    'enabled' : medialibrary_dep.found(),
     #'module_depends' : ['medialibrary', 'demux_mock', 'jpeg', 'png', 'rawvid'],
 }
 endif

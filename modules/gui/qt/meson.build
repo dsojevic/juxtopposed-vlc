@@ -1568,7 +1568,8 @@ if qt6_dep.found()
             'link_with': [libvlccore, libvlc],
             'link_args': qt_link_args,
             'dependencies': [qt6_dep, qt_extra_deps, qtest_qt6_dep],
-            'module_depends': ['subtitle', 'subsdec'],
+            'module_depends': ['filesystem', 'subtitle', 'subsdec', 'http'],
+            'env': ['VLC_PLUGIN_PATH=' + vlc_build_root / 'modules'],
         }
         if x11_dep.found() and xcb_dep.found() and qt_features_xcb
             vlc_tests += {
