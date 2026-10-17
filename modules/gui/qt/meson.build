@@ -31,6 +31,8 @@ qt6_dep = dependency('qt6',
 if host_machine.system() == 'darwin' and qt6_dep.found()
     qt_libdir = qt6_dep.get_variable(pkgconfig: 'libdir', configtool: '-query QT_INSTALL_LIBS')
     qt_extra_flags += '-F' + qt_libdir
+    # The platform compositor messages the native video view directly.
+    qt_link_args += '-lobjc'
 endif
 
 moc_headers = files(

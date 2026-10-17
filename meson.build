@@ -1164,7 +1164,10 @@ endif
 # to process Bison and Flex files respectively.
 
 flex = find_program('flex', required: false)
-bison = find_program('bison', required: false)
+# The grammars use `%define api.prefix {...}`, which needs Bison 3.0. Skip
+# older versions (such as the Bison 2.3 shipped with macOS) so the modules
+# are disabled at configure time instead of failing at build time.
+bison = find_program('bison', required: false, version: '>=3.0')
 
 bison_gen = disabler()
 flex_gen = disabler()

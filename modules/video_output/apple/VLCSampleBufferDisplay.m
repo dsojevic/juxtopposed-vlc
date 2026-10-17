@@ -928,8 +928,14 @@ API_AVAILABLE(tvos(17.0), visionos(1.0))
     VLCView *window = self.window;
     CGRect frame = CGRectMake(place->x, place->y, place->width, place->height);
 #if TARGET_OS_OSX
+    /* The place origin is top-left. Backing coordinates have a bottom-left
+     * origin, so for a flipped host view (such as Qt's QNSView) the
+     * conversion below already mirrors the rect vertically. */
     frame = [window convertRectFromBacking:frame];
-    frame.origin.y = window.bounds.size.height - frame.origin.y - frame.size.height;
+    if (window.isFlipped)
+        frame.origin.y = -frame.origin.y - frame.size.height;
+    else
+        frame.origin.y = window.bounds.size.height - frame.origin.y - frame.size.height;
 #else
     CGFloat scale = window.contentScaleFactor;
     frame.origin.x /= scale;

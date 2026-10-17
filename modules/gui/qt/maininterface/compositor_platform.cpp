@@ -27,6 +27,7 @@
 
 #ifdef __APPLE__
 #include <objc/runtime.h>
+#include <objc/message.h>
 #endif
 
 using namespace vlc;
@@ -78,6 +79,26 @@ bool CompositorPlatform::makeMainInterface(MainCtx *mainCtx, std::function<void 
     m_rootWindow = std::make_unique<QWindow>();
 
     m_videoWindow = new QWindow(m_rootWindow.get());
+
+#ifdef __APPLE__
+    {
+        // The root window is transparent for the UI layer, so give the video
+        // view an opaque black background for the letterbox areas around the
+        // video.
+        id view = reinterpret_cast<id>(m_videoWindow->winId());
+        auto send = reinterpret_cast<id (*)(id, SEL)>(objc_msgSend);
+        reinterpret_cast<void (*)(id, SEL, BOOL)>(objc_msgSend)(
+            view, sel_registerName("setWantsLayer:"), YES);
+        id layer = send(view, sel_registerName("layer"));
+        id black = send(reinterpret_cast<id>(objc_getClass("NSColor")),
+                        sel_registerName("blackColor"));
+        void *cgColor = reinterpret_cast<void *(*)(id, SEL)>(objc_msgSend)(
+            black, sel_registerName("CGColor"));
+        if (layer && cgColor)
+            reinterpret_cast<void (*)(id, SEL, void *)>(objc_msgSend)(
+                layer, sel_registerName("setBackgroundColor:"), cgColor);
+    }
+#endif
 
     m_quickWindow = new QQuickView(m_rootWindow.get());
     m_quickWindow->setResizeMode(QQuickView::SizeRootObjectToView);
