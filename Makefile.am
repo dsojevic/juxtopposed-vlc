@@ -31,6 +31,7 @@ EXTRA_DIST = \
 	extras/package/release/Dockerfile.linux \
 	extras/package/release/tests/test_version.py \
 	extras/package/release/tests/test_verify.py \
+	extras/package/release/tests/test_native_build.py \
 	extras/package/release/tests/test_package.py \
 	extras/package/release/tests/test_recovery.py \
 	extras/package/release/tests/test_dependency_cache.py \

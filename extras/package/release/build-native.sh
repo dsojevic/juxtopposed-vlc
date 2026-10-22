@@ -17,11 +17,11 @@ if [[ "$platform" == Darwin ]]; then
     done
     export LDFLAGS="${LDFLAGS:-} -L$gettext_prefix/lib"
     target=macos
-    platform_options=(-Dxcb=disabled -Dwayland=disabled)
+    platform_options=(-Dxcb=disabled -Dwayland=disabled -Dtests=enabled)
 else
     [[ "$platform" == Linux ]] || { echo 'Expected macOS or Linux' >&2; exit 1; }
     target=linux
-    platform_options=(-Dxcb=enabled -Dwayland=enabled)
+    platform_options=(-Dxcb=enabled -Dwayland=enabled -Dtests=disabled)
 fi
 export RELEASE_DEPS_DIR=${RELEASE_DEPS_DIR:-"$root/build-release-$target-deps"}
 bash extras/package/release/build-medialibrary.sh
@@ -30,7 +30,7 @@ build="$root/build-release-$target"
 if [[ ! -f "$build/build.ninja" ]]; then
     meson setup "$build" --prefix=/usr --libdir=lib --buildtype=release \
         -Dpkg_config_path="${PKG_CONFIG_PATH//:/,}" \
-        -Dqt=enabled -Dupdate-check=enabled -Dmedialibrary=enabled -Dnls=enabled -Dtests=disabled \
+        -Dqt=enabled -Dupdate-check=enabled -Dmedialibrary=enabled -Dnls=enabled \
         -Dzvbi=disabled -Dlua=enabled -Dskins2=disabled "${platform_options[@]}"
 else
     meson setup --reconfigure --clearcache "$build" --prefix=/usr --libdir=lib \
@@ -38,6 +38,12 @@ else
         -Dmedialibrary=enabled -Dupdate-check=enabled -Dskins2=disabled "${platform_options[@]}"
 fi
 meson compile -C "$build" -j "${JOBS:-4}"
+if [[ "$target" == macos ]]; then
+    # Exercise both proxy entry points and inherited request settings before
+    # bundling. A missing platform wrapper must fail this build, not playback.
+    meson compile -C "$build" -j "${JOBS:-4}" test_src_misc_configured_proxy
+    meson test -C "$build" --no-rebuild --print-errorlogs test_src_misc_configured_proxy
+fi
 stage="$build/stage"
 mkdir -p "$stage"
 meson install -C "$build" --destdir="$stage" --no-rebuild

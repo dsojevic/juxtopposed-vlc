@@ -39,13 +39,13 @@
 #include <CoreServices/CoreServices.h>
 #endif
 
-char *vlc_getProxyUrl(const char *url)
+static char *proxy_find(vlc_object_t *obj, const char *url)
 {
     if (url == NULL) {
         return NULL;
     }
     bool configured;
-    char *proxy = vlc_proxy_GetConfigured(&configured);
+    char *proxy = vlc_proxy_GetConfigured(obj, &configured);
     if (configured)
         return proxy;
 #if !TARGET_OS_IPHONE
@@ -80,4 +80,15 @@ char *vlc_getProxyUrl(const char *url)
 #endif
 
     return NULL;
+}
+
+char *vlc_getProxyUrl(const char *url)
+{
+    return proxy_find(NULL, url);
+}
+
+char *vlc_getProxyUrlForObject(vlc_object_t *obj, const char *url)
+{
+    assert(obj != NULL);
+    return proxy_find(obj, url);
 }
